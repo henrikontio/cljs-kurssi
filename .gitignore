@@ -2,3 +2,4 @@ resources/public/js
 target
 .idea
 cljs-kurssi.iml
+figwheel_server.log
