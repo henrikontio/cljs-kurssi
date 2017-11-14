@@ -6,7 +6,8 @@
             [cljs-react-material-ui.reagent :as ui]
             [cljs-react-material-ui.icons :as ic]
             [widgetshop.app.state :refer [app]]
-            [widgetshop.app.products :as products]))
+            [widgetshop.app.products :as products]
+            [widgetshop.app.state :as state]))
 
 
 
@@ -16,17 +17,25 @@
 ;; Task 2: Add actions to add item to cart. See that cart badge is automatically updated.
 ;;
 
-(defn listaus [e! jutut]
-  [:ul
-   (for [juttu jutut]
-     [:li [:a {:on-click #(e! (->ValitseJuttu juttu))} juttu]])])
+;; logging
+(defn log [value]
+  (do
+    (.log js/console value)
+    (println value)))
+
+;; (defn listaus [e! jutut]
+;;  [:ul
+;;   (for [juttu jutut]
+;;     [:li [:a {:on-click #(e! (->ValitseJuttu juttu))} juttu]])])
+
+(defn- add-to-cart [app product]
+  (update app :cart conj product))
 
 (defn products-table [products]
-  (.log js/console products)
   (if (= :loading products)
     [ui/refresh-indicator {:status "loading" :size 40 :left 10 :top 10}]
 
-    [ui/table
+    [ui/table {:on-row-selection (fn [selected] (log (nth selected 0)))}
      [ui/table-header {:display-select-all false :adjust-for-checkbox false}
       [ui/table-row
        [ui/table-header-column "Name"]
@@ -34,15 +43,16 @@
        [ui/table-header-column "Price (€)"]
        [ui/table-header-column "Add to cart"]]]
      [ui/table-body {:display-row-checkbox false}
-      (for [{:keys [id name description price]} products]
-        ^{:key id}
-        [ui/table-row
-         [ui/table-row-column name]
-         [ui/table-row-column description]
-         [ui/table-row-column price]
-         [ui/table-row-column
-          [ui/flat-button {:primary true :on-click #(js/alert "add to cart!")}
-           "Add to cart"]]])]]))
+      (for [product products]
+        (let [{:keys [id name description price]} product]
+          ^{:key id}
+          [ui/table-row
+           [ui/table-row-column name]
+           [ui/table-row-column description]
+           [ui/table-row-column price]
+           [ui/table-row-column
+            [ui/flat-button {:primary true :on-click #(state/update-state! add-to-cart product)}
+             "Add to cart"]]]))]]))
 
 (defn widgetshop [app]
   [ui/mui-theme-provider
